@@ -9,15 +9,12 @@ import os
 import time
 
 # Function to get the next available screenshot filename in the 'manga' folder
-def get_next_screenshot_filename():
+def get_next_screenshot_filename(index):
     # Create 'manga' folder if it doesn't exist
     if not os.path.exists("manga"):
         os.makedirs("manga")
 
-    i = 1
-    while os.path.exists(f"manga/screenshot_{i}.jpg"):
-        i += 1
-    return f"manga/screenshot_{i}.jpg"
+    return f"manga/screenshot_{index:03}.jpg"
 
 # Path to the AdBlocker extension (.crx file)
 adblocker_extension_path = r"E:\Projects\manga_dl\uBlock0_1.60.0.chromium\uBlock0.chromium.crx"
@@ -54,20 +51,19 @@ except Exception as e:
 # Wait briefly after clicking
 time.sleep(2)
 
-# Locate the manga canvas element
+# Locate the manga canvas element and take the first screenshot
 try:
-    manga_canvas = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "canvas.image-horizontal"))
+    # Wait for the initial "active" image container
+    active_image = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active canvas.image-horizontal"))
     )
 
-    # Get the next available filename
-    screenshot_filename = get_next_screenshot_filename()
-
-    # Take a screenshot of the canvas element
-    manga_canvas.screenshot(screenshot_filename)
-    print(f"Screenshot of the manga image saved as {screenshot_filename} in the 'manga' folder.")
+    # Take the first screenshot
+    screenshot_filename = get_next_screenshot_filename(1)
+    active_image.screenshot(screenshot_filename)
+    print(f"Screenshot of the first manga image saved as {screenshot_filename} in the 'manga' folder.")
 except Exception as e:
-    print(f"Error capturing manga image: {e}")
+    print(f"Error capturing the first manga image: {e}")
 
 # Wait briefly before clicking 'Next'
 time.sleep(1)
@@ -84,7 +80,24 @@ try:
 except Exception as e:
     print(f"Error clicking 'Next' button: {e}")
 
-# Stop the script after clicking 'Next' for debugging
+# Wait for 2 seconds after clicking 'Next'
+time.sleep(2)
+
+# Locate the new "active" image container and take another screenshot
+try:
+    # Wait for the new "active" canvas element
+    new_active_image = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active canvas.image-horizontal"))
+    )
+
+    # Take the second screenshot
+    screenshot_filename = get_next_screenshot_filename(2)
+    new_active_image.screenshot(screenshot_filename)
+    print(f"Screenshot of the second manga image saved as {screenshot_filename} in the 'manga' folder.")
+except Exception as e:
+    print(f"Error capturing the second manga image: {e}")
+
+# Stop the script for debugging
 print("Stopped for debugging. Check the browser for further inspection.")
 
 # Keep the browser open for inspection
