@@ -56,13 +56,22 @@ except Exception as e:
 # Wait briefly after clicking
 time.sleep(2)
 
-# Get the next available filename
-screenshot_filename = get_next_screenshot_filename()
+# Locate the manga canvas element and take a screenshot of it
+try:
+    # Wait for the canvas element to be present
+    manga_canvas = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "canvas.image-horizontal"))
+    )
 
-# Take a screenshot and save it in the 'manga' folder
-driver.save_screenshot(screenshot_filename)
+    # Get the next available filename
+    screenshot_filename = get_next_screenshot_filename()
 
-print(f"Screenshot saved as {screenshot_filename} in the 'manga' folder.")
+    # Take a screenshot of the canvas element
+    manga_canvas.screenshot(screenshot_filename)
+    print(f"Screenshot of the manga image saved as {screenshot_filename} in the 'manga' folder.")
+
+except Exception as e:
+    print(f"Error capturing the manga image: {e}")
 
 # Keep the browser open for inspection
 input("Press Enter to close the browser...")
