@@ -43,11 +43,9 @@ time.sleep(2)  # Adjust if needed
 
 # Locate and click the "Horizontal Follow" button
 try:
-    # Wait for the button to be present
     horizontal_button = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[text()='Horizontal Follow']"))
     )
-    # Click the button
     horizontal_button.click()
     print("Clicked the 'Horizontal Follow' button.")
 except Exception as e:
@@ -56,9 +54,8 @@ except Exception as e:
 # Wait briefly after clicking
 time.sleep(2)
 
-# Locate the manga canvas element and take a screenshot of it
+# Locate the manga canvas element
 try:
-    # Wait for the canvas element to be present
     manga_canvas = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "canvas.image-horizontal"))
     )
@@ -69,9 +66,26 @@ try:
     # Take a screenshot of the canvas element
     manga_canvas.screenshot(screenshot_filename)
     print(f"Screenshot of the manga image saved as {screenshot_filename} in the 'manga' folder.")
-
 except Exception as e:
-    print(f"Error capturing the manga image: {e}")
+    print(f"Error capturing manga image: {e}")
+
+# Wait briefly before clicking 'Next'
+time.sleep(1)
+
+# Locate and click the 'Next' button
+try:
+    next_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "#divslide > div.navi-buttons.hoz-controls.hoz-controls-rtl > a.nabu.nabu-left.hoz-next"))
+    )
+
+    # Click the 'Next' button using JavaScript
+    driver.execute_script("arguments[0].click();", next_button)
+    print("Clicked the 'Next' button.")
+except Exception as e:
+    print(f"Error clicking 'Next' button: {e}")
+
+# Stop the script after clicking 'Next' for debugging
+print("Stopped for debugging. Check the browser for further inspection.")
 
 # Keep the browser open for inspection
 input("Press Enter to close the browser...")
