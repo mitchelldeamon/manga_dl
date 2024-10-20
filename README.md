@@ -84,6 +84,7 @@ To run the automation script, execute the following command:
 - The script launches a Tkinter-based GUI for user input, where you can enter the URL, set the number of pages, select the download folder, and configure window dimensions and delay settings.
 
 Example URL: `https://mangareader.to/read/kaiju-no-8-1187/en/volume-1`
+
 Example URL: `https://mangareader.to/read/detective-conan-history-manga-68437/en/chapter-1`
 
 ### 2. Start the Download:
