@@ -1,8 +1,7 @@
 import os
 import time
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from tkinter import ttk
+from tkinter import filedialog, messagebox, ttk
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -11,117 +10,108 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-def get_next_screenshot_filename(folder, index):
+def create_driver(window_width, window_height, adblock_path):
     """
-    Generate the next available filename for a screenshot.
-    """
-    os.makedirs(folder, exist_ok=True)
-    return os.path.join(folder, f"page_{index}.jpg")
-
-def initialize_driver(window_width, window_height):
-    """
-    Set up and return a Selenium Chrome WebDriver with an adblocker extension.
+    Initialize and return a Chrome WebDriver with specified options.
     """
     options = Options()
-    adblocker_extension_path = r"E:\Projects\manga_dl\uBlock0_1.60.0.chromium\uBlock0.chromium.crx"
-    options.add_extension(adblocker_extension_path)
-
+    options.add_extension(adblock_path)
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-
-    # Set the browser window to the user-specified size
     driver.set_window_size(window_width, window_height)
 
-    time.sleep(5)  # Allow the extension to load
+    # Allow the adblock extension time to load
+    time.sleep(5)
+
     return driver
 
-def navigate_to_page(driver, url):
+def wait_for_element(driver, by, value, timeout=20, click=False):
     """
-    Open the URL in the driver and navigate to the manga page.
+    Wait for an element to be present and optionally click it.
+    """
+    try:
+        element = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((by, value)))
+        if click:
+            element.click()
+        return element
+    except Exception as e:
+        print(f"Error waiting for element {value}: {e}")
+        return None
+
+def navigate_and_prepare(driver, url):
+    """
+    Navigate to the URL and prepare the page for screenshot capture.
     """
     try:
         driver.get(url)
-        time.sleep(2)  # Allow the page to load
-
-        horizontal_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[text()='Horizontal Follow']"))
-        )
-        horizontal_button.click()
-        print("Clicked the 'Horizontal Follow' button.")
-        time.sleep(2)  # Wait briefly after clicking
+        time.sleep(2)  # Wait for initial load
+        wait_for_element(driver, By.XPATH, "//div[text()='Horizontal Follow']", click=True)
+        print("Navigated and set to 'Horizontal Follow' view.")
     except Exception as e:
-        print(f"Error navigating to page: {e}")
+        print(f"Navigation error: {e}")
 
-def capture_screenshot(driver, folder, page_number):
+def capture_and_save_screenshot(element, folder, page_number):
     """
-    Capture a screenshot of the manga page.
+    Capture a screenshot of the given element and save it to the specified folder.
     """
+    filename = os.path.join(folder, f"page_{page_number}.jpg")
+    os.makedirs(folder, exist_ok=True)
     try:
-        active_container = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active"))
-        )
-        image_element = active_container.find_element(By.CSS_SELECTOR, ".image-horizontal")
-
-        if image_element.tag_name == "img":
-            WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, ".ds-item.active img[src]"))
-            )
-
-        screenshot_filename = get_next_screenshot_filename(folder, page_number)
-        image_element.screenshot(screenshot_filename)
-        print(f"Screenshot of page {page_number} saved as {screenshot_filename}.")
+        element.screenshot(filename)
+        print(f"Screenshot saved: {filename}")
     except Exception as e:
-        print(f"Error capturing screenshot for page {page_number}: {e}")
+        print(f"Error capturing screenshot: {e}")
 
-def click_next_button(driver, page_number, total_pages):
+def process_page(driver, folder, page_number, total_pages):
     """
-    Click the 'Next' button to navigate to the next manga page.
+    Capture screenshot and click 'Next' to proceed to the next page.
     """
-    if page_number < total_pages:
-        try:
-            next_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next"))
-            )
-            driver.execute_script("arguments[0].click();", next_button)
-            print(f"Clicked the 'Next' button for page {page_number}.")
-            time.sleep(1)  # Wait for the next page to load
-        except Exception as e:
-            print(f"Failed to locate or click the 'Next' button for page {page_number}. Error: {e}")
+    active_container = wait_for_element(driver, By.CSS_SELECTOR, ".ds-item.active", 10)
+    if active_container:
+        image_element = active_container.find_element(By.CSS_SELECTOR, ".image-horizontal")
+        capture_and_save_screenshot(image_element, folder, page_number)
 
-def update_progress(progress, current_page, total_pages):
-    """
-    Update the progress bar value.
-    """
-    progress['value'] = (current_page / total_pages) * 100
-    root.update_idletasks()
+        if page_number < total_pages:
+            next_button = wait_for_element(driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", 10, click=True)
+            if next_button:
+                print(f"Proceeded to page {page_number + 1}.")
+            else:
+                print(f"Failed to navigate to page {page_number + 1}.")
 
 def start_download():
     """
-    Start the manga download process.
+    Start the download process for the manga pages.
+    """
+    url, total_pages, folder, volume_chapter, number, width, height = get_gui_inputs()
+    download_folder = os.path.join(folder, f"{volume_chapter.lower()}_{number}")
+    driver = create_driver(width, height, r"E:\Projects\manga_dl\uBlock0_1.60.0.chromium\uBlock0.chromium.crx")
+    navigate_and_prepare(driver, url)
+
+    for page_num in range(1, total_pages + 1):
+        process_page(driver, download_folder, page_num, total_pages)
+        update_progress(page_num, total_pages)
+
+    messagebox.showinfo("Download Complete", "All screenshots have been captured.")
+    driver.quit()
+
+def get_gui_inputs():
+    """
+    Retrieve inputs from the GUI.
     """
     url = url_entry.get()
     total_pages = int(pages_entry.get())
-    folder_location = folder_entry.get()
-    type_choice = type_var.get().lower()
-    type_number = number_entry.get()
+    folder = folder_entry.get()
+    volume_chapter = type_combobox.get()
+    number = number_combobox.get()
+    width = int(width_entry.get())
+    height = int(height_entry.get())
+    return url, total_pages, folder, volume_chapter, number, width, height
 
-    window_width = int(width_entry.get())
-    window_height = int(height_entry.get())
-
-    download_folder = os.path.join(folder_location, f"{type_choice}_{type_number}")
-    print(f"\nStarting download:\nURL: {url}\nTotal pages: {total_pages}\nDownload folder: {download_folder}")
-    print(f"Window size: {window_width} x {window_height}")
-
-    driver = initialize_driver(window_width, window_height)
-    navigate_to_page(driver, url)
-
-    for current_page in range(1, total_pages + 1):
-        capture_screenshot(driver, download_folder, current_page)
-        click_next_button(driver, current_page, total_pages)
-        update_progress(progress_bar, current_page, total_pages)
-
-    print("All screenshots captured.")
-    messagebox.showinfo("Download Complete", "All screenshots have been captured.")
-    driver.quit()
+def update_progress(current_page, total_pages):
+    """
+    Update the progress bar based on the current page.
+    """
+    progress_bar['value'] = (current_page / total_pages) * 100
+    root.update_idletasks()
 
 def browse_folder():
     """
@@ -136,42 +126,47 @@ def browse_folder():
 root = tk.Tk()
 root.title("Manga Downloader")
 
+# GUI Elements
 tk.Label(root, text="Enter URL:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 url_entry = tk.Entry(root, width=50)
 url_entry.grid(row=0, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Total Pages:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 pages_entry = tk.Entry(root, width=10)
-pages_entry.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
+pages_entry.grid(row=1, column=1, padx=5, pady=5)
 
 tk.Label(root, text="Download Folder:").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
 folder_entry = tk.Entry(root, width=50)
 folder_entry.grid(row=2, column=1, padx=5, pady=5)
 tk.Button(root, text="Browse", command=browse_folder).grid(row=2, column=2, padx=5, pady=5)
 
-tk.Label(root, text="Type (Volume/Chapter):").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
-type_var = tk.StringVar(value="Volume")
-tk.Radiobutton(root, text="Volume", variable=type_var, value="Volume").grid(row=3, column=1, sticky=tk.W)
-tk.Radiobutton(root, text="Chapter", variable=type_var, value="Chapter").grid(row=3, column=2, sticky=tk.W)
+# Combobox for Type selection (Volume/Chapter)
+tk.Label(root, text="Type:").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+type_combobox = ttk.Combobox(root, width=10, values=["Volume", "Chapter"])
+type_combobox.grid(row=3, column=1, padx=5, pady=5)
+type_combobox.current(0)  # Set default to "Volume"
 
+# Combobox for Volume/Chapter Number selection
 tk.Label(root, text="Volume/Chapter Number:").grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
-number_entry = tk.Entry(root, width=10)
-number_entry.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
+number_combobox = ttk.Combobox(root, width=10, values=[str(i) for i in range(1, 101)])
+number_combobox.grid(row=4, column=1, padx=5, pady=5)
+number_combobox.current(0)  # Set default to "1"
 
 tk.Label(root, text="Window Width:").grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
 width_entry = tk.Entry(root, width=10)
-width_entry.grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+width_entry.grid(row=5, column=1, padx=5, pady=5)
 width_entry.insert(0, "1450")  # Default width
 
 tk.Label(root, text="Window Height:").grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
 height_entry = tk.Entry(root, width=10)
-height_entry.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+height_entry.grid(row=6, column=1, padx=5, pady=5)
 height_entry.insert(0, "1934")  # Default height
 
-# Add progress bar
+# Progress bar
 progress_bar = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate")
 progress_bar.grid(row=7, column=0, columnspan=3, pady=10)
 
+# Start Download button
 start_button = tk.Button(root, text="Start Download", command=start_download, bg="green", fg="white")
 start_button.grid(row=8, column=0, columnspan=3, pady=10)
 
