@@ -8,13 +8,37 @@ from webdriver_manager.chrome import ChromeDriverManager
 import os
 import time
 
-# Function to get the next available screenshot filename in the 'manga' folder
-def get_next_screenshot_filename(index):
-    # Create 'manga' folder if it doesn't exist
-    if not os.path.exists("manga"):
-        os.makedirs("manga")
+# Function to get the next available screenshot filename in the specified folder
+def get_next_screenshot_filename(folder, index):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    return os.path.join(folder, f"screenshot_{index:03}.jpg")
 
-    return f"manga/screenshot_{index:03}.jpg"
+# Ask user for inputs before running the program
+url = input("Enter the URL you want to open: ")
+try:
+    total_pages = int(input("Enter the total number of pages: "))
+except ValueError:
+    print("Invalid input. Please enter a valid number.")
+    exit()
+
+folder_location = input("Enter the folder location where screenshots will be saved: ")
+type_choice = input("Is it a Volume or a Chapter? (Enter 'Volume' or 'Chapter'): ").strip().lower()
+
+if type_choice not in ['volume', 'chapter']:
+    print("Invalid choice. Please enter 'Volume' or 'Chapter'.")
+    exit()
+
+type_number = input(f"Enter the {type_choice.capitalize()} number: ")
+
+# Construct the download folder path
+download_folder = os.path.join(folder_location, f"{type_choice}_{type_number}")
+
+print(f"\nURL: {url}")
+print(f"Total pages: {total_pages}")
+print(f"Download folder: {download_folder}")
+print(f"Selected type: {type_choice.capitalize()}")
+print(f"Selected number: {type_number}")
 
 # Path to the AdBlocker extension (.crx file)
 adblocker_extension_path = r"E:\Projects\manga_dl\uBlock0_1.60.0.chromium\uBlock0.chromium.crx"
@@ -29,18 +53,18 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 # Maximize the browser window to full screen
 driver.maximize_window()
 
-# Ask the user for a URL
-url = input("Enter the URL you want to open: ")
+# Wait for the extension to fully load
+time.sleep(5)  # Increased wait time for extension loading
 
 # Open the provided URL
 driver.get(url)
 
 # Wait for the page to load
-time.sleep(2)  # Adjust if needed
+time.sleep(2)
 
 # Locate and click the "Horizontal Follow" button
 try:
-    horizontal_button = WebDriverWait(driver, 10).until(
+    horizontal_button = WebDriverWait(driver, 20).until(  # Increased wait time
         EC.element_to_be_clickable((By.XPATH, "//div[text()='Horizontal Follow']"))
     )
     horizontal_button.click()
@@ -50,15 +74,6 @@ except Exception as e:
 
 # Wait briefly after clicking
 time.sleep(2)
-
-# Ask the user for the total number of pages
-try:
-    total_pages = int(input("Enter the total number of pages: "))
-    print(f"Total number of pages: {total_pages}")
-except ValueError:
-    print("Invalid input. Please enter a valid number.")
-    driver.quit()
-    exit()
 
 # Loop through each page and take screenshots
 for current_page in range(1, total_pages + 1):
@@ -80,9 +95,9 @@ for current_page in range(1, total_pages + 1):
             )
 
         # Take a screenshot of the image element
-        screenshot_filename = get_next_screenshot_filename(current_page)
+        screenshot_filename = get_next_screenshot_filename(download_folder, current_page)
         image_element.screenshot(screenshot_filename)
-        print(f"Screenshot of page {current_page} saved as {screenshot_filename} in the 'manga' folder.")
+        print(f"Screenshot of page {current_page} saved as {screenshot_filename}.")
 
         # Click the 'Next' button if not on the last page
         if current_page < total_pages:
@@ -96,7 +111,7 @@ for current_page in range(1, total_pages + 1):
                 print(f"Clicked the 'Next' button for page {current_page}.")
 
                 # Wait briefly for the next page to load
-                time.sleep(2)
+                time.sleep(3)  # Increased wait time for better loading
             except Exception as e:
                 print(f"Failed to locate or click the 'Next' button for page {current_page}. Error: {e}")
 
