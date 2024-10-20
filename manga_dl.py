@@ -9,11 +9,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
 
-def create_driver(window_width, window_height, adblock_path):
+# Load environment variables from the .env file
+load_dotenv()
+
+def create_driver(window_width, window_height):
     """
     Initialize and return a Chrome WebDriver with specified options.
     """
+    # Get the adblock extension path from the .env file
+    adblock_path = os.getenv('ADBLOCK_PATH')
+    if not adblock_path:
+        raise ValueError("Environment variable 'ADBLOCK_PATH' is not set or empty.")
+
     options = Options()
     options.add_extension(adblock_path)
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -86,12 +95,13 @@ def start_download():
     """
     url, total_pages, folder, volume_chapter, number, width, height, delay = get_gui_inputs()
     download_folder = os.path.join(folder, f"{volume_chapter.lower()}_{number}")
-    driver = create_driver(width, height, r"E:\Projects\manga_dl\uBlock0_1.60.0.chromium\uBlock0.chromium.crx")
+
+    driver = create_driver(width, height)
     navigate_and_prepare(driver, url)
 
     for page_num in range(1, total_pages + 1):
         process_page(driver, download_folder, page_num, total_pages, delay)
-        update_progress(page_num, total_pages - 1)
+        update_progress(page_num, total_pages)
 
     messagebox.showinfo("Download Complete", "All screenshots have been captured.")
     driver.quit()
@@ -101,7 +111,7 @@ def get_gui_inputs():
     Retrieve inputs from the GUI.
     """
     url = url_entry.get()
-    total_pages = int(pages_entry.get())
+    total_pages = int(pages_entry.get()) - 1  # Subtract 1 from the total pages input
     folder = folder_entry.get()
     volume_chapter = type_combobox.get()
     number = number_combobox.get()
