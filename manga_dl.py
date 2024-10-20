@@ -17,7 +17,7 @@ def get_next_screenshot_filename(folder, index):
     os.makedirs(folder, exist_ok=True)
     return os.path.join(folder, f"page_{index}.jpg")
 
-def initialize_driver():
+def initialize_driver(window_width, window_height):
     """
     Set up and return a Selenium Chrome WebDriver with an adblocker extension.
     """
@@ -27,8 +27,8 @@ def initialize_driver():
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    # Set the browser window to the specified size
-    driver.set_window_size(1450, 1934)
+    # Set the browser window to the user-specified size
+    driver.set_window_size(window_width, window_height)
 
     time.sleep(5)  # Allow the extension to load
     return driver
@@ -96,10 +96,14 @@ def start_download():
     type_choice = type_var.get().lower()
     type_number = number_entry.get()
 
+    window_width = int(width_entry.get())
+    window_height = int(height_entry.get())
+
     download_folder = os.path.join(folder_location, f"{type_choice}_{type_number}")
     print(f"\nStarting download:\nURL: {url}\nTotal pages: {total_pages}\nDownload folder: {download_folder}")
+    print(f"Window size: {window_width} x {window_height}")
 
-    driver = initialize_driver()
+    driver = initialize_driver(window_width, window_height)
     navigate_to_page(driver, url)
 
     for current_page in range(1, total_pages + 1):
@@ -145,7 +149,17 @@ tk.Label(root, text="Volume/Chapter Number:").grid(row=4, column=0, padx=5, pady
 number_entry = tk.Entry(root, width=10)
 number_entry.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
 
+tk.Label(root, text="Window Width:").grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+width_entry = tk.Entry(root, width=10)
+width_entry.grid(row=5, column=1, padx=5, pady=5, sticky=tk.W)
+width_entry.insert(0, "1450")  # Default width
+
+tk.Label(root, text="Window Height:").grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
+height_entry = tk.Entry(root, width=10)
+height_entry.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
+height_entry.insert(0, "1934")  # Default height
+
 start_button = tk.Button(root, text="Start Download", command=start_download, bg="green", fg="white")
-start_button.grid(row=5, column=0, columnspan=3, pady=10)
+start_button.grid(row=7, column=0, columnspan=3, pady=10)
 
 root.mainloop()
