@@ -2,6 +2,7 @@ import os
 import time
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter import ttk
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -86,6 +87,13 @@ def click_next_button(driver, page_number, total_pages):
         except Exception as e:
             print(f"Failed to locate or click the 'Next' button for page {page_number}. Error: {e}")
 
+def update_progress(progress, current_page, total_pages):
+    """
+    Update the progress bar value.
+    """
+    progress['value'] = (current_page / total_pages) * 100
+    root.update_idletasks()
+
 def start_download():
     """
     Start the manga download process.
@@ -109,6 +117,7 @@ def start_download():
     for current_page in range(1, total_pages + 1):
         capture_screenshot(driver, download_folder, current_page)
         click_next_button(driver, current_page, total_pages)
+        update_progress(progress_bar, current_page, total_pages)
 
     print("All screenshots captured.")
     messagebox.showinfo("Download Complete", "All screenshots have been captured.")
@@ -159,7 +168,11 @@ height_entry = tk.Entry(root, width=10)
 height_entry.grid(row=6, column=1, padx=5, pady=5, sticky=tk.W)
 height_entry.insert(0, "1934")  # Default height
 
+# Add progress bar
+progress_bar = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate")
+progress_bar.grid(row=7, column=0, columnspan=3, pady=10)
+
 start_button = tk.Button(root, text="Start Download", command=start_download, bg="green", fg="white")
-start_button.grid(row=7, column=0, columnspan=3, pady=10)
+start_button.grid(row=8, column=0, columnspan=3, pady=10)
 
 root.mainloop()
