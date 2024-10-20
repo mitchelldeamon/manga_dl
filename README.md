@@ -27,7 +27,7 @@ folder. The project includes a Tkinter-based GUI for user input and progress tra
 
 ### 1. Clone the Repository
 
-Clone the repository to your local machine:
+Open a `Terminal` window and clone the repository to your local machine:
 
 `git clone https://github.com/mitchelldeamon/manga_dl.git`
 
@@ -75,7 +75,7 @@ Create a `.env` file in the project directory to store your environment variable
 
 To run the automation script, execute the following command:
 
-`python manga_downloader.py`
+`python manga_dl.py`
 
 ## How It Works
 
