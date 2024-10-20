@@ -54,13 +54,13 @@ Install the required dependencies using the `requirements.txt` file:
 
 1. Unzip `uBlock0_1.60.0.chromium.zip`
 2. Double click and enter `uBlock0_1.60.0.chromium`
-3. Using that folder, open chrome and go to `chrome://extensions/`
+3. Using that folder, open Chrome and go to `chrome://extensions/`
 4. Click `Load unpacked` and select `uBlock0_1.60.0.chromium`
-5. Under `All Extension` find `uBlock Origin 1.60.0`
+5. Under `All Extensions` find `uBlock Origin 1.60.0`
 6. Click `Details`
 7. Click `Pack Extension`
 8. Choose the same directory as `uBlock0_1.60.0.chromium`
-9. Close Chrome (You can remove the extension now if you want)
+9. Close Chrome (You can `Remove` the extension now if you want)
 10. This creates a `uBlock0_1.60.0.chromium\uBlock0.chromium.crx` that you will use for the `path_to_adblock_extension`
 
 ### 5. Set Up Environment Variables
@@ -71,11 +71,9 @@ Create a `.env` file in the project directory to store your environment variable
 
 - Replace `path_to_adblock_extension` with the full path to your AdBlock extension file.
 
-### 6. Verify ChromeDriver Installation
+### 6. Install Requirements
 
-Ensure that ChromeDriver is correctly installed and matches the installed version of Chrome:
-
-`pip install webdriver-manager`
+`pip install -r requirements.txt`
 
 ## How to Run
 
