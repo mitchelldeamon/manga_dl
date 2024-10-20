@@ -14,7 +14,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 def get_next_screenshot_filename(folder, index):
     if not os.path.exists(folder):
         os.makedirs(folder)
-    return os.path.join(folder, f"screenshot_{index:03}.jpg")
+    return os.path.join(folder, f"page_{index}.jpg")
 
 # Function to start the download process
 def start_download():
