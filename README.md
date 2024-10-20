@@ -69,7 +69,7 @@ Create a `.env` file in the project directory to store your environment variable
 
 `ADBLOCK_PATH=path_to_adblock_extension`
 
-- Replace `path_to_adblock_extension` with the full path to your AdBlock extension file.
+- Replace `path_to_adblock_extension` with the full path to your `uBlock0_1.60.0.chromium\uBlock0.chromium.crx`.
 
 ## How to Run
 
