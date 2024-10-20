@@ -71,10 +71,6 @@ Create a `.env` file in the project directory to store your environment variable
 
 - Replace `path_to_adblock_extension` with the full path to your AdBlock extension file.
 
-### 6. Install Requirements
-
-`pip install -r requirements.txt`
-
 ## How to Run
 
 To run the automation script, execute the following command:
