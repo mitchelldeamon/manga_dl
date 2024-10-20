@@ -61,7 +61,7 @@ def capture_and_save_screenshot(element, folder, page_number):
     except Exception as e:
         print(f"Error capturing screenshot: {e}")
 
-def process_page(driver, folder, page_number, total_pages):
+def process_page(driver, folder, page_number, total_pages, delay):
     """
     Capture screenshot and click 'Next' to proceed to the next page.
     """
@@ -74,6 +74,9 @@ def process_page(driver, folder, page_number, total_pages):
             next_button = wait_for_element(driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", 10, click=True)
             if next_button:
                 print(f"Proceeded to page {page_number + 1}.")
+
+                # Add delay between clicks based on user input
+                time.sleep(delay)
             else:
                 print(f"Failed to navigate to page {page_number + 1}.")
 
@@ -81,13 +84,13 @@ def start_download():
     """
     Start the download process for the manga pages.
     """
-    url, total_pages, folder, volume_chapter, number, width, height = get_gui_inputs()
+    url, total_pages, folder, volume_chapter, number, width, height, delay = get_gui_inputs()
     download_folder = os.path.join(folder, f"{volume_chapter.lower()}_{number}")
     driver = create_driver(width, height, r"E:\Projects\manga_dl\uBlock0_1.60.0.chromium\uBlock0.chromium.crx")
     navigate_and_prepare(driver, url)
 
     for page_num in range(1, total_pages + 1):
-        process_page(driver, download_folder, page_num, total_pages)
+        process_page(driver, download_folder, page_num, total_pages, delay)
         update_progress(page_num, total_pages)
 
     messagebox.showinfo("Download Complete", "All screenshots have been captured.")
@@ -104,7 +107,8 @@ def get_gui_inputs():
     number = number_combobox.get()
     width = int(width_entry.get())
     height = int(height_entry.get())
-    return url, total_pages, folder, volume_chapter, number, width, height
+    delay = delay_slider.get() / 1000  # Convert from milliseconds to seconds
+    return url, total_pages, folder, volume_chapter, number, width, height, delay
 
 def update_progress(current_page, total_pages):
     """
@@ -162,12 +166,18 @@ height_entry = tk.Entry(root, width=10)
 height_entry.grid(row=6, column=1, padx=5, pady=5)
 height_entry.insert(0, "1934")  # Default height
 
+# Slider for delay between 'Next' clicks
+tk.Label(root, text="Delay between 'Next' clicks (ms):").grid(row=7, column=0, padx=5, pady=5, sticky=tk.W)
+delay_slider = tk.Scale(root, from_=0, to=1000, orient="horizontal", length=200)
+delay_slider.grid(row=7, column=1, padx=5, pady=5)
+delay_slider.set(250)  # Set default to 250 ms
+
 # Progress bar
 progress_bar = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate")
-progress_bar.grid(row=7, column=0, columnspan=3, pady=10)
+progress_bar.grid(row=8, column=0, columnspan=3, pady=10)
 
 # Start Download button
 start_button = tk.Button(root, text="Start Download", command=start_download, bg="green", fg="white")
-start_button.grid(row=8, column=0, columnspan=3, pady=10)
+start_button.grid(row=9, column=0, columnspan=3, pady=10)
 
 root.mainloop()
