@@ -63,28 +63,42 @@ except ValueError:
 # Loop through each page and take screenshots
 for current_page in range(1, total_pages + 1):
     try:
-        # Wait for the "active" image canvas element
-        active_image = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active canvas.image-horizontal"))
+        print(f"Attempting to capture screenshot for page {current_page}...")
+
+        # Wait for the active image container
+        active_container = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active"))
         )
 
-        # Take a screenshot of the current canvas
+        # Look for an <img> or <canvas> within the active container
+        image_element = active_container.find_element(By.CSS_SELECTOR, ".image-horizontal")
+
+        # If it's an <img>, wait for the 'src' attribute to be loaded
+        if image_element.tag_name == "img":
+            WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, ".ds-item.active img[src]"))
+            )
+
+        # Take a screenshot of the image element
         screenshot_filename = get_next_screenshot_filename(current_page)
-        active_image.screenshot(screenshot_filename)
+        image_element.screenshot(screenshot_filename)
         print(f"Screenshot of page {current_page} saved as {screenshot_filename} in the 'manga' folder.")
 
         # Click the 'Next' button if not on the last page
         if current_page < total_pages:
-            next_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "#divslide > div.navi-buttons.hoz-controls.hoz-controls-rtl > a.nabu.nabu-left.hoz-next"))
-            )
+            try:
+                next_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next"))
+                )
 
-            # Click the 'Next' button using JavaScript
-            driver.execute_script("arguments[0].click();", next_button)
-            print(f"Clicked the 'Next' button for page {current_page}.")
+                # Click the 'Next' button using JavaScript
+                driver.execute_script("arguments[0].click();", next_button)
+                print(f"Clicked the 'Next' button for page {current_page}.")
 
-            # Wait briefly for the next page to load
-            time.sleep(2)
+                # Wait briefly for the next page to load
+                time.sleep(2)
+            except Exception as e:
+                print(f"Failed to locate or click the 'Next' button for page {current_page}. Error: {e}")
 
     except Exception as e:
         print(f"Error on page {current_page}: {e}")
