@@ -1,7 +1,7 @@
 # Manga Downloader Automation
 
 This Python project automates the process of downloading manga pages
-from a given URL, capturing screenshots, and saving them in a designated
+from a `mangareader.to` URL, capturing screenshots, and saving them in a designated
 folder. The project includes a Tkinter-based GUI for user input and progress tracking.
 
 ## Table of Contents
@@ -82,6 +82,9 @@ To run the automation script, execute the following command:
 ### 1. Launch GUI:
 
 - The script launches a Tkinter-based GUI for user input, where you can enter the URL, set the number of pages, select the download folder, and configure window dimensions and delay settings.
+
+Example URL: `https://mangareader.to/read/kaiju-no-8-1187/en/volume-1`
+Example URL: `https://mangareader.to/read/detective-conan-history-manga-68437/en/chapter-1`
 
 ### 2. Start the Download:
 
