@@ -91,7 +91,7 @@ def start_download():
 
     for page_num in range(1, total_pages + 1):
         process_page(driver, download_folder, page_num, total_pages, delay)
-        update_progress(page_num, total_pages)
+        update_progress(page_num, total_pages - 1)
 
     messagebox.showinfo("Download Complete", "All screenshots have been captured.")
     driver.quit()
