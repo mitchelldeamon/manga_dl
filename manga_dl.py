@@ -26,7 +26,10 @@ def initialize_driver():
     options.add_extension(adblocker_extension_path)
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    driver.maximize_window()
+
+    # Set the browser window to the specified size
+    driver.set_window_size(1450, 1934)
+
     time.sleep(5)  # Allow the extension to load
     return driver
 
