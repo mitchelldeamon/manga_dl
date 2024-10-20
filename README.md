@@ -17,12 +17,11 @@ folder. The project includes a Tkinter-based GUI for user input and progress tra
 ## Prerequisites
 
 1. Python 3.7+ - Make sure Python is installed on your system.
-2. Git - Required to clone the repository (optional).
+2. Git - Required to clone the repository.
 3. Chrome Browser - Required for web scraping and automation.
 4. ChromeDriver - Use `webdriver_manager` to automate Chrome installation.
 5. Tkinter - A built-in Python library for GUI development.
-6. Discord Webhook (Optional) - For sending notifications about download completion.
-7. dotenv - For loading environment variables.
+6. dotenv - For loading environment variables.
 
 ## Setup
 
