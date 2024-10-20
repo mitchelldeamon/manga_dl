@@ -41,7 +41,7 @@ time.sleep(2)  # Adjust if needed
 # Locate and click the "Horizontal Follow" button
 try:
     horizontal_button = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "//div[text()='Horizontal Follow']"))
+        EC.element_to_be_clickable((By.XPATH, "//div[text()='Horizontal Follow']"))
     )
     horizontal_button.click()
     print("Clicked the 'Horizontal Follow' button.")
@@ -51,54 +51,46 @@ except Exception as e:
 # Wait briefly after clicking
 time.sleep(2)
 
-# Locate the manga canvas element and take the first screenshot
+# Ask the user for the total number of pages
 try:
-    # Wait for the initial "active" image container
-    active_image = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active canvas.image-horizontal"))
-    )
+    total_pages = int(input("Enter the total number of pages: "))
+    print(f"Total number of pages: {total_pages}")
+except ValueError:
+    print("Invalid input. Please enter a valid number.")
+    driver.quit()
+    exit()
 
-    # Take the first screenshot
-    screenshot_filename = get_next_screenshot_filename(1)
-    active_image.screenshot(screenshot_filename)
-    print(f"Screenshot of the first manga image saved as {screenshot_filename} in the 'manga' folder.")
-except Exception as e:
-    print(f"Error capturing the first manga image: {e}")
+# Loop through each page and take screenshots
+for current_page in range(1, total_pages + 1):
+    try:
+        # Wait for the "active" image canvas element
+        active_image = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active canvas.image-horizontal"))
+        )
 
-# Wait briefly before clicking 'Next'
-time.sleep(1)
+        # Take a screenshot of the current canvas
+        screenshot_filename = get_next_screenshot_filename(current_page)
+        active_image.screenshot(screenshot_filename)
+        print(f"Screenshot of page {current_page} saved as {screenshot_filename} in the 'manga' folder.")
 
-# Locate and click the 'Next' button
-try:
-    next_button = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "#divslide > div.navi-buttons.hoz-controls.hoz-controls-rtl > a.nabu.nabu-left.hoz-next"))
-    )
+        # Click the 'Next' button if not on the last page
+        if current_page < total_pages:
+            next_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "#divslide > div.navi-buttons.hoz-controls.hoz-controls-rtl > a.nabu.nabu-left.hoz-next"))
+            )
 
-    # Click the 'Next' button using JavaScript
-    driver.execute_script("arguments[0].click();", next_button)
-    print("Clicked the 'Next' button.")
-except Exception as e:
-    print(f"Error clicking 'Next' button: {e}")
+            # Click the 'Next' button using JavaScript
+            driver.execute_script("arguments[0].click();", next_button)
+            print(f"Clicked the 'Next' button for page {current_page}.")
 
-# Wait for 2 seconds after clicking 'Next'
-time.sleep(2)
+            # Wait briefly for the next page to load
+            time.sleep(2)
 
-# Locate the new "active" image container and take another screenshot
-try:
-    # Wait for the new "active" canvas element
-    new_active_image = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, ".ds-item.active canvas.image-horizontal"))
-    )
+    except Exception as e:
+        print(f"Error on page {current_page}: {e}")
+        break
 
-    # Take the second screenshot
-    screenshot_filename = get_next_screenshot_filename(2)
-    new_active_image.screenshot(screenshot_filename)
-    print(f"Screenshot of the second manga image saved as {screenshot_filename} in the 'manga' folder.")
-except Exception as e:
-    print(f"Error capturing the second manga image: {e}")
-
-# Stop the script for debugging
-print("Stopped for debugging. Check the browser for further inspection.")
+print("All screenshots captured.")
 
 # Keep the browser open for inspection
 input("Press Enter to close the browser...")
