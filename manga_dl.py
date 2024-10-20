@@ -79,7 +79,7 @@ def click_next_button(driver, page_number, total_pages):
             )
             driver.execute_script("arguments[0].click();", next_button)
             print(f"Clicked the 'Next' button for page {page_number}.")
-            time.sleep(3)  # Wait for the next page to load
+            time.sleep(1)  # Wait for the next page to load
         except Exception as e:
             print(f"Failed to locate or click the 'Next' button for page {page_number}. Error: {e}")
 
