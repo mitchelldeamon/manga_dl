@@ -223,10 +223,10 @@ height_entry.insert(0, "1934")  # Default height
 # Slider for delay between 'Next' clicks
 tk.Label(root, text="Delay between 'Next' clicks (ms):").grid(
     row=7, column=0, padx=5, pady=5, sticky=tk.W)
-delay_slider = tk.Scale(root, from_=0, to=1000,
+delay_slider = tk.Scale(root, from_=0, to=2000,
                         orient="horizontal", length=200)
 delay_slider.grid(row=7, column=1, padx=5, pady=5)
-delay_slider.set(250)  # Set default to 250 ms
+delay_slider.set(100)  # Set default to 100 ms
 
 # Progress bar
 progress_bar = ttk.Progressbar(
