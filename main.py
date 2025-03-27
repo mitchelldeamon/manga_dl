@@ -172,7 +172,7 @@ def capture_and_save_screenshot(element, folder, page_number):
     filename = os.path.join(folder, f"{page_number:03d}.jpg")
     os.makedirs(folder, exist_ok=True)
     try:
-        time.sleep(1)
+        time.sleep(5)
         element.screenshot(filename)
         print(f"Screenshot saved: {filename}")
     except Exception as e:
@@ -182,22 +182,35 @@ def capture_and_save_screenshot(element, folder, page_number):
 # def process_page_forward(driver, folder, page_number, total_pages, delay):
 def process_page_forward(driver, folder, page_number, total_pages):
     """Capture screenshot and click 'Next' to move forward."""
-    active_container = wait_for_element(
-        driver, By.CSS_SELECTOR, ".ds-item.active", timeout=10)
-    if active_container:
-        image_element = active_container.find_element(
-            By.CSS_SELECTOR, ".image-horizontal")
-        capture_and_save_screenshot(image_element, folder, page_number)
-        if page_number < total_pages - 1:
-            # time.sleep(delay)
-            next_button = wait_for_element(
-                driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=1, click=True)
+
+    # Debugging print statement to check which pages are being processed
+    print(f"Processing page: {page_number} / {total_pages - 1}")
+
+    # Ensure we do not take a duplicate screenshot on the last valid page
+    if page_number < total_pages:
+        active_container = wait_for_element(
+            driver, By.CSS_SELECTOR, ".ds-item.active", timeout=10
+        )
+
+        if active_container:
+            image_element = active_container.find_element(
+                By.CSS_SELECTOR, ".image-horizontal"
+            )
+            capture_and_save_screenshot(image_element, folder, page_number)
+
+            # Only click "Next" if we are NOT on the last valid page
+            if page_number < total_pages - 1:
+                next_button = wait_for_element(
+                    driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=1, click=True
+                )
 
 
 # def download_chapter(driver, url, folder, content_type, number, delay):
 def download_chapter(driver, url, folder, content_type, number):
     """Download all pages for a single chapter or volume."""
-    download_folder = os.path.join(folder, f"{content_type.lower()}-{number}")
+    formatted_number = f"{int(number):03d}"
+    download_folder = os.path.join(
+        folder, f"{content_type.lower()}-{formatted_number}")
     if not navigate_and_prepare(driver, url):
         return False
 
@@ -205,7 +218,7 @@ def download_chapter(driver, url, folder, content_type, number):
     # if not preload_all_pages(driver, total_pages):
     #     return False
 
-    for page_num in range(1, total_pages + 1):
+    for page_num in range(1, total_pages):
         process_page_forward(driver, download_folder,
                              #  page_num, total_pages, delay)
                              page_num, total_pages)
