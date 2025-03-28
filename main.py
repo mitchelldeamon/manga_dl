@@ -21,10 +21,16 @@ if not ADBLOCK_PATH:
         "Environment variable 'ADBLOCK_PATH' is not set or empty.")
 
 
+def let_page_load():
+    loading = time.sleep(10)
+    return loading
+
+
 def create_driver(window_width, window_height):
     """Initialize and return a Chrome WebDriver with specified options."""
     options = Options()
     options.add_extension(ADBLOCK_PATH)
+    options.add_argument("--window-position=-40,-40")
     driver = webdriver.Chrome(service=Service(
         ChromeDriverManager().install()), options=options)
     driver.set_window_size(window_width, window_height)
@@ -89,6 +95,10 @@ def generate_next_url(base_url, content_type, current_number):
 
 def get_total_pages(driver):
     """Extract the total number of pages from the webpage."""
+
+    print("loading page for 10 seconds")
+    let_page_load()
+
     try:
         # Try to find the page count element using the first method
         page_count_element = wait_for_element(
@@ -145,26 +155,29 @@ def navigate_and_prepare(driver, url):
     return True
 
 
-def preload_all_pages(driver, total_pages):
-    """Cycle through all pages to ensure full preloading."""
-    try:
-        for _ in range(total_pages - 1):  # Forward cycle
-            next_button = wait_for_element(
-                driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=2, click=True)
-            if not next_button:
-                return False
-            time.sleep(0.1)
+# def preload_all_pages(driver, total_pages):
+#     """Cycle through all pages to ensure full preloading."""
+#     try:
+#         for _ in range(total_pages - 1):  # Forward cycle
+#             next_button = wait_for_element(
+#                 driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=2, click=True)
+#             if not next_button:
+#                 return False
+#             time.sleep(0.1)
 
-        for _ in range(total_pages - 1):  # Backward cycle
-            prev_button = wait_for_element(
-                driver, By.CSS_SELECTOR, "a.nabu.nabu-right.hoz-prev", timeout=2, click=True)
-            if not prev_button:
-                return False
-            time.sleep(0.1)
-        return True
-    except Exception as e:
-        print(f"Error during page preloading: {e}")
-        return False
+#         for _ in range(total_pages - 1):  # Backward cycle
+#             prev_button = wait_for_element(
+#                 driver, By.CSS_SELECTOR, "a.nabu.nabu-right.hoz-prev", timeout=2, click=True)
+#             if not prev_button:
+#                 return False
+#             time.sleep(0.1)
+#         return True
+#     except Exception as e:
+#         print(f"Error during page preloading: {e}")
+#         return False
+
+
+# this is something to do with the loading screen <iframe src="about:blank" style="position: absolute; width: 1px; height: 1px; display: none; opacity: 0;"></iframe>
 
 
 def capture_and_save_screenshot(element, folder, page_number):
@@ -172,7 +185,7 @@ def capture_and_save_screenshot(element, folder, page_number):
     filename = os.path.join(folder, f"{page_number:03d}.jpg")
     os.makedirs(folder, exist_ok=True)
     try:
-        time.sleep(5)
+        time.sleep(3)
         element.screenshot(filename)
         print(f"Screenshot saved: {filename}")
     except Exception as e:
@@ -180,32 +193,119 @@ def capture_and_save_screenshot(element, folder, page_number):
 
 
 # def process_page_forward(driver, folder, page_number, total_pages, delay):
+# def process_page_forward(driver, folder, page_number, total_pages):
+#     """Capture screenshot and click 'Next' to move forward."""
+
+#     # Debugging print statement to check which pages are being processed
+#     print(f"Processing page: {page_number} / {total_pages - 1}")
+
+#     # Ensure we do not take a duplicate screenshot on the last valid page
+#     if page_number < total_pages:
+#         active_container = wait_for_element(
+#             driver, By.CSS_SELECTOR, ".ds-item.active", timeout=10
+#         )
+
+#         if active_container:
+#             max_retries = 5
+#             for attempt in range(max_retries):
+#                 try:
+#                     image_element = active_container.find_element(
+#                         By.CSS_SELECTOR, ".image-horizontal"
+#                     )
+#                     capture_and_save_screenshot(
+#                         image_element, folder, page_number)
+#                     break  # Exit loop if element is found and screenshot is captured
+#                 except Exception as e:
+#                     if attempt < max_retries - 1:
+#                         print(
+#                             f"Retry {attempt + 1}/{max_retries} for '.image-horizontal'")
+#                         driver.refresh()
+#                         time.sleep(10)  # Brief delay before retrying
+#                         continue
+#                     else:
+#                         print(
+#                             f"Failed to locate '.image-horizontal' after {max_retries} attempts: {str(e)}")
+#                         input("Pausing for debugging. Press Enter to continue...")
+#                         raise Exception(
+#                             f"Failed to locate '.image-horizontal' after {max_retries} attempts: {str(e)}")
+
+#             # Only click "Next" if we are NOT on the last valid page
+#             if page_number < total_pages - 1:
+#                 next_button = wait_for_element(
+#                     driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=1, click=True
+#                 )
+
+
 def process_page_forward(driver, folder, page_number, total_pages):
     """Capture screenshot and click 'Next' to move forward."""
-
-    # Debugging print statement to check which pages are being processed
     print(f"Processing page: {page_number} / {total_pages - 1}")
 
-    # Ensure we do not take a duplicate screenshot on the last valid page
     if page_number < total_pages:
-        active_container = wait_for_element(
-            driver, By.CSS_SELECTOR, ".ds-item.active", timeout=10
-        )
+        max_retries = 5
+        same_page_retries = 0  # Track how many times we retry on the same page
+        last_url = driver.current_url  # Store the initial page URL
 
-        if active_container:
-            image_element = active_container.find_element(
-                By.CSS_SELECTOR, ".image-horizontal"
-            )
-            capture_and_save_screenshot(image_element, folder, page_number)
-
-            # Only click "Next" if we are NOT on the last valid page
-            if page_number < total_pages - 1:
-                next_button = wait_for_element(
-                    driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=1, click=True
+        for attempt in range(max_retries):
+            try:
+                # Ensure the active container is loaded
+                active_container = wait_for_element(
+                    driver, By.CSS_SELECTOR, ".ds-item.active", timeout=10
                 )
+
+                if not active_container:
+                    raise Exception("Active container not found.")
+
+                # Now check for the image element inside the container
+                image_element = active_container.find_element(
+                    By.CSS_SELECTOR, ".image-horizontal"
+                )
+                if not image_element:
+                    raise Exception("Image element not found.")
+
+                capture_and_save_screenshot(image_element, folder, page_number)
+                break  # Successfully captured the screenshot, exit retry loop
+
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(
+                        f"Retry {attempt + 1}/{max_retries} for '.image-horizontal'")
+
+                    # **Check if we are stuck on the same page**
+                    current_url = driver.current_url
+                    if current_url == last_url:
+                        same_page_retries += 1
+                    else:
+                        same_page_retries = 0  # Reset if page actually changes
+
+                    if same_page_retries >= 3:  # If stuck, log error and break
+                        print(
+                            "Detected repeated retries on the same page. Moving forward.")
+                        break
+                    time.sleep(5)
+                    driver.refresh()
+                    time.sleep(5)  # Short pause to allow the refresh
+
+                    # **Wait again for the content to load**
+                    wait_for_element(driver, By.CSS_SELECTOR,
+                                     ".ds-item.active", timeout=15)
+                    time.sleep(3)  # Additional buffer to ensure stability
+                else:
+                    print(
+                        f"Failed to locate '.image-horizontal' after {max_retries} attempts: {str(e)}")
+                    input("Pausing for debugging. Press Enter to continue...")
+                    raise Exception(
+                        f"Failed to locate '.image-horizontal' after {max_retries} attempts: {str(e)}")
+
+        # Click "Next" if not on the last page
+        if page_number < total_pages - 1:
+            next_button = wait_for_element(
+                driver, By.CSS_SELECTOR, "a.nabu.nabu-left.hoz-next", timeout=5, click=True
+            )
 
 
 # def download_chapter(driver, url, folder, content_type, number, delay):
+
+
 def download_chapter(driver, url, folder, content_type, number):
     """Download all pages for a single chapter or volume."""
     formatted_number = f"{int(number):03d}"
